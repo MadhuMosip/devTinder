@@ -2,9 +2,14 @@ const express = require("express");
 
 const app = express();
 
-app.get("/user", (req,res) =>{
-  res.send({name:"Madhu", age:27})
-})
+app.get("/user", (req,res, next) =>{
+  console.log("Handling the route user one")
+  // res.send("Handling one")
+  next()
+}, (req, res) =>{
+  console.log("Handling the route user two")
+  res.send("handling two")
+});
 
 app.post("/user", (req,res) =>{
   res.send("Data saved succesfully")
