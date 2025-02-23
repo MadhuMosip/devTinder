@@ -2,25 +2,22 @@ const express = require("express");
 
 const app = express();
 
-app.get("/user", (req,res, next) =>{
-  console.log("Handling the route user one")
-  // res.send("Handling one")
-  next()
-}, (req, res) =>{
-  console.log("Handling the route user two")
-  res.send("handling two")
+const {AdminAuth, UserAuth} = require('./middleWare/auth')
+
+
+app.use("/admin", AdminAuth)
+
+app.get('/user/getUserData', UserAuth, (req, res) =>{
+  res.send("Send user data successfully")
+})
+
+app.get('/admin/getUserDetails', (req,res) =>{
+
+  res.send("successfully sent user details to admin")
 });
 
-app.post("/user", (req,res) =>{
-  res.send("Data saved succesfully")
-})
-
-app.delete("/user", (req,res) =>{
-  res.send("Data delated successfully")
-})
-
-app.use("/test", (req, res) => {
-  res.send("Test Hello World!");
+app.get('/admin/deleteUser', (req,res) =>{
+  res.send("successfully deleted user details")
 });
 
 app.listen(3000, () => {
