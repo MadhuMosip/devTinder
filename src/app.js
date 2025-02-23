@@ -1,25 +1,32 @@
 const express = require("express");
-
 const app = express();
+const { connectDB } = require("./config/database");
+const User = require("./models/user");
 
-const {AdminAuth, UserAuth} = require('./middleWare/auth')
+const { AdminAuth, UserAuth } = require("./middleWare/auth");
 
+app.post("/signup", async (req, res) => {
+  let userData = {
+    firstName: "Madhuravas",
+    lastName: "Reddy",
+    emailId: "madhu@gmail.com",
+    password:"madhu@123"
+  };
+  
+  let user = new User(userData);
+  await user.save();
 
-app.use("/admin", AdminAuth)
-
-app.get('/user/getUserData', UserAuth, (req, res) =>{
-  res.send("Send user data successfully")
-})
-
-app.get('/admin/getUserDetails', (req,res) =>{
-
-  res.send("successfully sent user details to admin")
+  await user.save(userData);
+  res.send("Data Added successfully")
 });
 
-app.get('/admin/deleteUser', (req,res) =>{
-  res.send("successfully deleted user details")
-});
-
-app.listen(3000, () => {
-  console.log("Server is running on port 3000");
-});
+connectDB()
+  .then(() => {
+    console.log("successfully connection establised..");
+    app.listen(7070, () => {
+      console.log("Server is running on port 7070");
+    });
+  })
+  .catch((err) => {
+    console.log("Connection failed!!");
+  });
