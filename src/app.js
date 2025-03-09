@@ -2,16 +2,53 @@ const express = require("express");
 const app = express();
 const { connectDB } = require("./config/database");
 const User = require("./models/user");
-
+const { Error } = require("mongoose");
+const {validator} = require("./Utils/validater");
+const bcrypt = require("bcrypt");
 
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
-  
-  let user = new User(req.body);
-  await user.save();
-  res.send("Data Added successfully")
+
+  const {firstName, lastName, emailId, password} = req.body
+
+  try{
+    validator(req);
+
+    let encryptedPassword = await bcrypt.hash(password,10);
+    
+    const userData = {
+      firstName,
+      lastName,
+      emailId,
+      password:encryptedPassword
+    };
+
+    let user = new User(userData);
+    await user.save();
+    res.send("Data Added successfully");
+  }catch(err){
+    res.status(400).send("ERROR: " + err);
+  }
 });
+
+app.post("/login", async (req, res) =>{
+  try{
+    const {emailId, password} = req.body;
+    const user = await User.findOne({emailId});
+    if(!user){
+      throw new Error("Invalid credentials");
+    };
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if(isPasswordValid){
+      res.send("log in successfull!!!")
+    }else{
+      throw new Error("Invalid credentials");
+    }
+  }catch(err){
+    res.status(400).send("ERROR: " + err);
+  }
+})
 
 app.get("/user", async (req,res) =>{
   let filterData = req.body.emailId;
@@ -57,20 +94,35 @@ app.delete("/user/:userId", async (req, res) => {
   }
 })
 
-app.patch("/user", async (req, res) => {
-  let userId = req.body.userId;
+app.patch("/user/:userId", async (req, res) => {
+  let userId = req.params.userId;
   let data = req.body
 
   try{
-    let userData = await User.findOneAndUpdate({"emailId": userId}, data, {returnDocument:'before'});
-    console.log(userData);
+
+    let ALLOW_UPDATEDATA = ["firstName", "lastName", "gender", "skills"];
+
+    let checkUpdateData = Object.keys(data).every(item =>{ return ALLOW_UPDATEDATA.includes(item)});
+
+    if(!checkUpdateData){
+      throw new Error("Failed to update data")
+    }
+
+    let checkSkillsLength = req.body?.skills.length;
+
+    if(checkSkillsLength > 10){
+      throw new Error("Skills sholuld be 10 or less then 10");
+      
+    }
+
+    let userData = await User.findByIdAndUpdate(userId, data, {returnDocument:'before',runValidators: true});
     if(userData){
       res.send("Data Updated successfully")
     }else{
       res.status(400).send("Data not found")
     }
   }catch(err){
-    res.status(400).send("something went wrong");
+    res.status(400).send("UPDATE FAILED" + err);
   }
 })
 
