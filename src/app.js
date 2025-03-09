@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const { connectDB } = require("./config/database");
 const User = require("./models/user");
+const { Error } = require("mongoose");
 
 
 app.use(express.json());
@@ -61,11 +62,27 @@ app.delete("/user/:userId", async (req, res) => {
   }
 })
 
-app.patch("/user", async (req, res) => {
-  let userId = req.body.userId;
+app.patch("/user/:userId", async (req, res) => {
+  let userId = req.params.userId;
   let data = req.body
 
   try{
+
+    let ALLOW_UPDATEDATA = ["firstName", "lastName", "gender", "skills"];
+
+    let checkUpdateData = Object.keys(data).every(item =>{ return ALLOW_UPDATEDATA.includes(item)});
+
+    if(!checkUpdateData){
+      throw new Error("Failed to update data")
+    }
+
+    let checkSkillsLength = req.body?.skills.length;
+
+    if(checkSkillsLength > 10){
+      throw new Error("Skills sholuld be 10 or less then 10");
+      
+    }
+
     let userData = await User.findByIdAndUpdate(userId, data, {returnDocument:'before',runValidators: true});
     if(userData){
       res.send("Data Updated successfully")
@@ -73,7 +90,7 @@ app.patch("/user", async (req, res) => {
       res.status(400).send("Data not found")
     }
   }catch(err){
-    res.status(400).send("something went wrong" + err);
+    res.status(400).send("UPDATE FAILED" + err);
   }
 })
 

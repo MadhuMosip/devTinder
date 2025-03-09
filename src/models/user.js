@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const validate = require("validator");
 
 const userSchema = new mongoose.Schema({
     firstName:{
@@ -12,14 +13,19 @@ const userSchema = new mongoose.Schema({
         type:String,
         unique: [true, "duplicate email ID found"],
         trim:true,
-        lowercase:true
+        lowercase:true,
+        validate(value){
+            if(!validate.isEmail(value)){
+                throw new Error("invalid email");
+            }
+        }
     },
     password:{
         type:String,
         required:true,
         validate(value){
-            if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(value)){
-                throw new Error("Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&).");
+            if(!validate.isStrongPassword(value)){
+                throw new Error("provide strong password");
             }
         }
     },
@@ -36,7 +42,12 @@ const userSchema = new mongoose.Schema({
     },
     photoUrl:{
         type: String,
-        default: "https://cdn.vectorstock.com/i/2000v/89/50/generic-person-gray-photo-placeholder-man-vector-24848950.avif"
+        default: "https://cdn.vectorstock.com/i/2000v/89/50/generic-person-gray-photo-placeholder-man-vector-24848950.avif",
+        validate(value){
+            if(!validate.isURL(value)){
+                throw new Error("invalid URL");
+            }
+        }
     },
     about:{
         type:String
@@ -44,6 +55,6 @@ const userSchema = new mongoose.Schema({
     skills:{
         type:[String]
     }
-}, )
+}, { timestamps: true })
 
 module.exports = mongoose.model("User", userSchema)
