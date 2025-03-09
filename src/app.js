@@ -9,8 +9,12 @@ app.use(express.json());
 app.post("/signup", async (req, res) => {
   
   let user = new User(req.body);
-  await user.save();
-  res.send("Data Added successfully")
+  try{
+    await user.save();
+    res.send("Data Added successfully");
+  }catch(err){
+    res.status(400).send("something went worng" + err);
+  }
 });
 
 app.get("/user", async (req,res) =>{
@@ -62,15 +66,14 @@ app.patch("/user", async (req, res) => {
   let data = req.body
 
   try{
-    let userData = await User.findOneAndUpdate({"emailId": userId}, data, {returnDocument:'before'});
-    console.log(userData);
+    let userData = await User.findByIdAndUpdate(userId, data, {returnDocument:'before',runValidators: true});
     if(userData){
       res.send("Data Updated successfully")
     }else{
       res.status(400).send("Data not found")
     }
   }catch(err){
-    res.status(400).send("something went wrong");
+    res.status(400).send("something went wrong" + err);
   }
 })
 
