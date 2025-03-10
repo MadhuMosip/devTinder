@@ -5,8 +5,13 @@ const User = require("./models/user");
 const { Error } = require("mongoose");
 const {validator} = require("./Utils/validater");
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
+
+const {UserAuth} = require("./middleWare/auth");
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
 
@@ -41,6 +46,8 @@ app.post("/login", async (req, res) =>{
     };
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if(isPasswordValid){
+      let generateToken = jwt.sign({_id:user._id}, "DEV@TINDER$790",  { expiresIn: '1d' });
+      res.cookie("token", generateToken, { expires: new Date(Date.now() + 900000), httpOnly: true });
       res.send("log in successfull!!!")
     }else{
       throw new Error("Invalid credentials");
@@ -50,81 +57,14 @@ app.post("/login", async (req, res) =>{
   }
 })
 
-app.get("/user", async (req,res) =>{
-  let filterData = req.body.emailId;
+app.get("/user", UserAuth, async (req,res) =>{
 
   try{
-    let users = await User.find({emailId: filterData});
-    if(users.length !== 0){
-      res.send(users);
-    }else{
-      res.status(404).send("User Data not found");
-    }
+    res.send(req.user);
   }catch(err){
-    res.status(400).send("something went worng");
+    res.status(400).send("ERROR: " + err);
   }
 });
-
-app.get("/feed", async (req, res) =>{
-  try{
-    let users = await User.find({});
-    if(users.length !== 0){
-      res.send(users);
-    }else{
-      res.status(404).send("currently no one registred");
-    }
-  }catch(err){
-    res.status(400).send("something went worng");
-  }
-});
-
-app.delete("/user/:userId", async (req, res) => {
-  let userId = req.params.userId;
-
-  try{
-    let deletedUser = await User.findByIdAndDelete(userId);
-    if(deletedUser){
-      res.send("Deleted User Data")
-    }else{
-      res.status(400).send("User not found");
-    }
-    
-  }catch(err){
-    res.status(400).send("invalid User ID");
-  }
-})
-
-app.patch("/user/:userId", async (req, res) => {
-  let userId = req.params.userId;
-  let data = req.body
-
-  try{
-
-    let ALLOW_UPDATEDATA = ["firstName", "lastName", "gender", "skills"];
-
-    let checkUpdateData = Object.keys(data).every(item =>{ return ALLOW_UPDATEDATA.includes(item)});
-
-    if(!checkUpdateData){
-      throw new Error("Failed to update data")
-    }
-
-    let checkSkillsLength = req.body?.skills.length;
-
-    if(checkSkillsLength > 10){
-      throw new Error("Skills sholuld be 10 or less then 10");
-      
-    }
-
-    let userData = await User.findByIdAndUpdate(userId, data, {returnDocument:'before',runValidators: true});
-    if(userData){
-      res.send("Data Updated successfully")
-    }else{
-      res.status(400).send("Data not found")
-    }
-  }catch(err){
-    res.status(400).send("UPDATE FAILED" + err);
-  }
-})
 
 connectDB()
   .then(() => {
