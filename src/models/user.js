@@ -74,4 +74,4 @@ userSchema.methods.validatePassword = async function (userSentPassword){
     return passwordValidated
 }
 
-module.exports = mongoose.model("User", userSchema)
+module.exports = mongoose.model("User", userSchema);
