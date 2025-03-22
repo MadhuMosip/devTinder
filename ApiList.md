@@ -11,10 +11,9 @@ profileRouter
 - PATCH - /profile/password
 
 connectionRequest
-- POST - /connection/send/interested/:userId
-- POST - /connection/send/ignored/:userId
-- POST - /connection/review/accepted/:requestId
-- POST - /connection/review/rejected/:requestId
+- POST - /connection/send/:status/:userId
+- POST - /connection/review/:status/:requestId
+
 
 userRouter
 - GET - /user/feed

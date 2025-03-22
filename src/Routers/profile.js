@@ -10,7 +10,7 @@ const User = require("../models/user");
 
 profileRouter.get("/profile/get", UserAuth, async (req,res) =>{
   try{
-    res.send(req.user);
+    res.json({data:req.user});
   }catch(err){
     res.status(400).send("ERROR: " + err);
   }
@@ -24,7 +24,7 @@ profileRouter.patch("/profile/edit", UserAuth, async (req,res) => {
         const createData = req.user;
         Object.keys(req.body).every(key => createData[key] = req.body[key]);
         createData.save();
-        res.send({message:`${createData.firstName}, your Data updated successfully`, data: createData})
+        res.json({message:`${createData.firstName}, your Data updated successfully`, data: createData})
     }catch(err){
         res.status(400).send("ERROR: " + err.message)
     }
@@ -41,7 +41,7 @@ profileRouter.patch("/profile/updatePassword", UserAuth, async (req, res) =>{
             const newHashPassword = await bcrypt.hash(userSendData.newPassword, 10);
             user.password = newHashPassword;
             await user.save();
-            res.send({message: `${user.firstName} your data updated successfully`});
+            res.json({message: `${user.firstName} your data updated successfully`});
        }else{
         throw new Error("Invalid Credentials")
        }
@@ -62,7 +62,7 @@ profileRouter.patch('/profile/forgotPassword', async (req, res) =>{
         const newPasswordHash = await bcrypt.hash(userReqData.newPassword, 10);
         user.password = newPasswordHash;
         await user.save();
-        res.send({message: `${user.firstName} your password updated successfully`});
+        res.json({message: `${user.firstName} your password updated successfully`});
     }catch(err){
         res.status(400).send("ERROR: " + err.message)
     }

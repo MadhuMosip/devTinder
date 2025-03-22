@@ -22,7 +22,7 @@ authRouter.post("/signup", async (req, res) => {
 
     let user = new User(userData);
     await user.save();
-    res.send("Data Added successfully");
+    res.json({message:"Data Added successfully"});
   } catch (err) {
     res.status(400).send("ERROR: " + err);
   }
@@ -42,7 +42,7 @@ authRouter.post("/login", async (req, res) => {
         expires: new Date(Date.now() + 900000),
         httpOnly: true,
       });
-      res.send("log in successfull!!!");
+      res.json({message:"log in successfull!!!"});
     } else {
       throw new Error("Invalid credentials");
     }
@@ -53,7 +53,7 @@ authRouter.post("/login", async (req, res) => {
 
 authRouter.post('/logout', async (req,res) => {
     res.cookie("token", null, {expires: new Date(Date.now())});
-    res.send("User logged out successfully!!");
+    res.json({message:"User logged out successfully!!"});
 })
 
 module.exports = authRouter
