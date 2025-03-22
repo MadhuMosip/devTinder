@@ -11,7 +11,7 @@ const UserAuth = async (req,res,next) =>{
 
     const userData = await jwt.verify(token, "DEV@TINDER$790");
 
-    const user = await User.findById(userData._id);
+    const user = await User.findById(userData._id).select("-password");
     
     if(!user){
       throw new Error("user not availabe");

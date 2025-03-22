@@ -39,11 +39,41 @@ requestRouter.post("/connection/send/:status/:toUserId", UserAuth, async (req, r
 
         const connectionRequest = new ConnectionRequest(connectionReqData);
         const data = await connectionRequest.save();
-        res.send({message:"created connection", data})
+        res.json({message: `connection ${status}`, data})
     }catch(err){
         res.status(400).send("ERROR: " + err)
     }
 
+});
+
+requestRouter.post("/connection/review/:status/:requestId", UserAuth, async (req,res) =>{
+    try{
+        const {status, requestId} = req.params;
+        const userData = req.user
+
+        const allowedStatus = ["accepted", "rejected"];
+
+        if(!allowedStatus.includes(status)){
+            return res.status(400).send("Status is not valid");
+        };
+
+        const connectionRequest = await ConnectionRequest.findOne({
+            $or:[{ _id: requestId, toUserId: userData._id,status: "interested"},
+            { _id: requestId, toUserId: userData._id,status: "accepted"}]
+           
+        });
+
+        if(!connectionRequest){
+           return res.status(400).send("Invalid request details");
+        };
+
+        connectionRequest.status = status;              
+
+        connectionRequest.save();
+        res.json({message:"Connection " + status});
+    }catch(err){
+        res.status(400).send("ERROR: " + err)
+    }
 })
 
 
