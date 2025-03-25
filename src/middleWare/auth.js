@@ -6,7 +6,7 @@ const UserAuth = async (req,res,next) =>{
     const {token} = req.cookies;
 
     if(!token){
-      throw new Error("Invalid token!!!!");
+      return res.status(401).send("Cookies not found");
     }
 
     const userData = await jwt.verify(token, "DEV@TINDER$790");
