@@ -21,8 +21,16 @@ authRouter.post("/signup", async (req, res) => {
     };
 
     let user = new User(userData);
-    await user.save();
-    res.json({message:"Data Added successfully"});
+
+    const generateToken = await user.getJWT();
+
+    res.cookie("token", generateToken, {
+      expires: new Date(Date.now() + 86400000),
+      httpOnly:true,
+    });
+     
+    let newUser = await user.save();
+    res.json({message:"Data Added successfully", data:newUser});
   } catch (err) {
     res.status(400).send("ERROR: " + err);
   }
@@ -31,20 +39,26 @@ authRouter.post("/signup", async (req, res) => {
 authRouter.post("/login", async (req, res) => {
   try {
     const { emailId, password } = req.body;
+    const allowData = ["firstName", "lastName", "emailId", "photoUrl", "skills", "about", "age", "gender"];
     const user = await User.findOne({ emailId });
     if (!user) {
-      throw new Error("Invalid credentials");
+      return res.status(401).send("Invalid credentials");
     }
     const isPasswordValid = await user.validatePassword(password);
     if (isPasswordValid) {
       let generateToken = await user.getJWT();
       res.cookie("token", generateToken, {
-        expires: new Date(Date.now() + 900000),
+        expires: new Date(Date.now() + 86400000),
         httpOnly: true,
       });
-      res.json({message:"log in successfull!!!"});
+      
+      const data = allowData.reduce((acc, field) =>{
+        if (user[field]) acc[field] = user[field];
+        return acc
+      }, {});
+      res.json({message:"log in successfull!!!", data});
     } else {
-      throw new Error("Invalid credentials");
+      return res.status(401).send("Invalid credentials");
     }
   } catch (err) {
     res.status(400).send("ERROR: " + err);
