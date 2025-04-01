@@ -23,8 +23,8 @@ profileRouter.patch("/profile/edit", UserAuth, async (req,res) => {
         }
         const createData = req.user;
         Object.keys(req.body).every(key => createData[key] = req.body[key]);
-        createData.save();
-        res.json({message:`${createData.firstName}, your Data updated successfully`, data: createData})
+        await createData.save();
+        res.json({message:`${createData.firstName}, your Data updated successfully`, data: createData});
     }catch(err){
         res.status(400).send("ERROR: " + err.message)
     }
